@@ -1,0 +1,19 @@
+{
+  "processos": [
+    {
+      "idProcesso": 1,
+      "host": "127.0.0.1",
+      "porta": 6101
+    },
+    {
+      "idProcesso": 2,
+      "host": "127.0.0.1",
+      "porta": 6102
+    },
+    {
+      "idProcesso": 3,
+      "host": "127.0.0.1",
+      "porta": 6103
+    }
+  ]
+}
