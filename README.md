@@ -6,6 +6,8 @@ Implementacao da exclusao mutua distribuida com modularidade em camadas:
 2. `dimex/dimex.py`: algoritmo de exclusao mutua distribuida (interface `Lock` e `Unlock`).
 3. `processoDimex.py`: aplicacao de testes concorrente que usa o DiMeX.
 4. `validarSaida.py`: verificador de violacoes (`||` e `..`) no arquivo compartilhado.
+5. `validarSnapshots.py`: valida invariantes dos snapshots (Parte 2).
+6. `rodar_snapshots.sh`: executa exemplo completo de snapshots e validacao.
 
 ## Requisitos
 
@@ -95,3 +97,44 @@ Resultado esperado:
 - Ele bloqueia ate receber `RESPOSTA` de todos.
 - Se dois processos pedem ao mesmo tempo, a prioridade eh decidida por `(timestampLamport, idProcesso)`.
 - Quando um processo chama `Unlock`, ele envia respostas que ficaram adiadas para manter a exclusao mutua.
+
+## Parte 2 - Snapshot (Chandy-Lamport)
+
+### Opcao automatizada (script shell)
+
+```bash
+./rodar_snapshots.sh
+```
+
+### 1. Executar processos com snapshots
+
+Escolha um processo iniciador (ex.: `--snapshotIniciador 1`) e defina quantos snapshots ele deve disparar.
+Exemplo com 3 processos:
+
+Terminal 1 (inicia snapshots):
+
+```bash
+python3 processoDimex.py --idProcesso 1 --configProcessos processosExemplo.json --arquivoCompartilhado mxOUT.txt --quantidadeAcessos 2000 --snapshotQuantidade 200 --snapshotIntervalo 0.05 --snapshotIniciador 1 --snapshotDir .dimex_snapshots
+```
+
+Terminal 2:
+
+```bash
+python3 processoDimex.py --idProcesso 2 --configProcessos processosExemplo.json --arquivoCompartilhado mxOUT.txt --quantidadeAcessos 2000 --snapshotDir .dimex_snapshots
+```
+
+Terminal 3:
+
+```bash
+python3 processoDimex.py --idProcesso 3 --configProcessos processosExemplo.json --arquivoCompartilhado mxOUT.txt --quantidadeAcessos 2000 --snapshotDir .dimex_snapshots
+```
+
+### 2. Validar invariantes dos snapshots
+
+```bash
+python3 validarSnapshots.py --diretorio .dimex_snapshots --configProcessos processosExemplo.json
+```
+
+Resultado esperado:
+
+- `Total de violacoes: 0`
