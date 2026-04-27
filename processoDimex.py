@@ -1,12 +1,14 @@
 import argparse
 import json
+import os
+import time
+
 from pathlib import Path
 
 from dimex.dimex import Dimex
 
 
 def CarregarConfigProcessos(caminhoConfig: str) -> dict[int, dict[str, int | str]]:
-    """Carrega e valida o arquivo de configuracao com os processos participantes."""
     with open(caminhoConfig, "r", encoding="utf-8") as arquivoConfig:
         dadosConfig = json.load(arquivoConfig)
 
@@ -27,23 +29,23 @@ def CarregarConfigProcessos(caminhoConfig: str) -> dict[int, dict[str, int | str
 
     return processos
 
-
+# Funciona
 def EscreverNoArquivoCompartilhado(caminhoArquivo: str) -> None:
-    """Escreve . e | de forma sequencial na secao critica, sem sleeps."""
-    with open(caminhoArquivo, "a", encoding="utf-8") as arquivoSaida:
-        arquivoSaida.write(".")
-        arquivoSaida.write("|")
-        arquivoSaida.flush()
+    fd = os.open(caminhoArquivo, os.O_WRONLY | os.O_CREAT | os.O_APPEND | os.O_SYNC, 0o644)
+    os.write(fd, b".")
+    os.write(fd, b"|")
+    os.close(fd)
+
+# não funciona, provavelmente por causa do buffering do Python
+# def EscreverNoArquivoCompartilhado(caminhoArquivo: str) -> None:
+#     with open(caminhoArquivo, "a", encoding="utf-8") as arquivoSaida:
+#         arquivoSaida.write(".")
+#         arquivoSaida.flush()
+#         arquivoSaida.write("|")
+#         arquivoSaida.flush()
 
 
-def ExecutarProcesso(
-    idProcesso: int,
-    caminhoConfig: str,
-    caminhoArquivoCompartilhado: str,
-    quantidadeAcessos: int,
-    logIntervalo: int,
-) -> None:
-    """Inicializa o DiMeX e executa acessos repetidos ao recurso compartilhado."""
+def ExecutarProcesso(idProcesso: int, caminhoConfig: str, caminhoArquivoCompartilhado: str, quantidadeAcessos: int, logIntervalo: int) -> None:
     processos = CarregarConfigProcessos(caminhoConfig)
 
     if idProcesso not in processos:
@@ -56,12 +58,15 @@ def ExecutarProcesso(
 
     try:
         for indiceAcesso in range(quantidadeAcessos):
-            dimex.Lock()
-            try:
-                # O trecho abaixo representa o uso do recurso compartilhado protegido pelo lock.
-                EscreverNoArquivoCompartilhado(caminhoArquivoCompartilhado)
-            finally:
-                dimex.Unlock()
+            # dimex.Lock()
+            # try:
+            #     # O trecho abaixo representa o uso do recurso compartilhado protegido pelo lock.
+            #     EscreverNoArquivoCompartilhado(caminhoArquivoCompartilhado)
+            # finally:
+            #     dimex.Unlock()
+
+            EscreverNoArquivoCompartilhado(caminhoArquivoCompartilhado)
+
 
             acessosConcluidos = indiceAcesso + 1
 
@@ -70,6 +75,20 @@ def ExecutarProcesso(
                     f"Processo {idProcesso}: {acessosConcluidos} acessos concluidos",
                     flush=True,
                 )
+
+        # Aguarda os demais processos para evitar que fiquem sem respostas.
+        statusDir = Path(caminhoArquivoCompartilhado).resolve().parent / ".dimex_status"
+        statusDir.mkdir(parents=True, exist_ok=True)
+        arquivoDone = statusDir / f"processo{idProcesso}.done"
+        arquivoDone.write_text("1", encoding="utf-8")
+        arquivosPendentes = [
+            statusDir / f"processo{outroId}.done"
+            for outroId in processos
+            if outroId != idProcesso
+        ]
+
+        while any(not arquivo.exists() for arquivo in arquivosPendentes):
+            time.sleep(0.2)
     finally:
         dimex.Parar()
 

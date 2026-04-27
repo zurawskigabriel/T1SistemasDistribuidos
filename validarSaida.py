@@ -8,7 +8,6 @@ def LerConteudoArquivo(caminhoArquivo: str) -> str:
 
 
 def EncontrarViolacoes(conteudoArquivo: str) -> list[tuple[int, str]]:
-    """Retorna todas as posicoes com || ou .. no arquivo final."""
     violacoes = []
 
     for indice in range(len(conteudoArquivo) - 1):

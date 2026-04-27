@@ -20,6 +20,26 @@ Implementacao da exclusao mutua distribuida com modularidade em camadas:
 
 ## Como executar (3 processos)
 
+### Opcao automatizada (script shell)
+
+No Linux com interface grafica, use o script abaixo para abrir 4 terminais:
+
+- 3 terminais executam `processoDimex.py` (um por processo)
+- 1 terminal aguarda os 3 processos terminarem e executa `validarSaida.py`
+- os terminais permanecem abertos ao final
+
+```bash
+./rodar_dimex.sh
+```
+
+Observacoes da opcao automatizada:
+
+- O script limpa `mxOUT.txt` antes de iniciar.
+- O script procura um terminal suportado nesta ordem: `gnome-terminal`, `xfce4-terminal`, `konsole`, `xterm`.
+- A quantidade de acessos por processo esta definida no script (`QTD_ACESSOS=2000`).
+
+### Opcao manual
+
 ### 1. Limpar arquivo de saida
 
 ```bash
