@@ -313,7 +313,7 @@ class Dimex:
             "processoId": self.idProcesso,
             "estado": contexto.estadoLocal,
             "canaisEntrada": {
-                str(idRemoto): contexto.canaisEstado.get(idRemoto, [])
+                str(idRemoto): []
                 for idRemoto in self.idsRemotos
             },
         }
