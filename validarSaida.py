@@ -6,7 +6,6 @@ def LerConteudoArquivo(caminhoArquivo: str) -> str:
     with open(caminhoArquivo, "r", encoding="utf-8") as arquivoEntrada:
         return arquivoEntrada.read()
 
-
 def EncontrarViolacoes(conteudoArquivo: str) -> list[tuple[int, str]]:
     violacoes = []
 
@@ -17,15 +16,9 @@ def EncontrarViolacoes(conteudoArquivo: str) -> list[tuple[int, str]]:
 
     return violacoes
 
-
 def Main() -> None:
     parser = argparse.ArgumentParser(description="Valida violacoes de exclusao mutua no arquivo de saida")
-    parser.add_argument(
-        "--arquivo",
-        type=str,
-        default="mxOUT.txt",
-        help="Arquivo gerado pela aplicacao distribuida",
-    )
+    parser.add_argument("--arquivo", type=str, default="mxOUT.txt", help="Arquivo gerado pela aplicacao distribuida")
 
     args = parser.parse_args()
 
@@ -36,7 +29,7 @@ def Main() -> None:
     print(f"Total de pares avaliados: {max(0, len(conteudoArquivo) - 1)}")
 
     if not violacoes:
-        print("Nenhuma violacao encontrada: nao ha || nem ..")
+        print("Nenhuma violacao encontrada")
         sys.exit(0)
 
     print(f"Foram encontradas {len(violacoes)} violacoes")

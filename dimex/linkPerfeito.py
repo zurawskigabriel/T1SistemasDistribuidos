@@ -8,23 +8,13 @@ from typing import Any, Callable
 
 from .serializacao import DesserializarMensagem, SerializarMensagem
 
-
 class LinkPerfeito:
-    """Implementacao de Perfect Link sobre sockets TCP."""
-
-    def __init__(
-        self,
-        idProcesso: int,
-        processos: dict[int, dict[str, Any]],
-        aoReceberMensagem: Callable[[dict[str, Any]], None],
-    ) -> None:
+    def __init__(self, idProcesso: int, processos: dict[int, dict[str, Any]], aoReceberMensagem: Callable[[dict[str, Any]], None]) -> None:
         self.idProcesso = idProcesso
         self.processos = processos
         self.aoReceberMensagem = aoReceberMensagem
 
-        self.destinos = [
-            idRemoto for idRemoto in sorted(processos.keys()) if idRemoto != idProcesso
-        ]
+        self.destinos = [idRemoto for idRemoto in sorted(processos.keys()) if idRemoto != idProcesso]
         self.enderecosDestino = {
             idRemoto: (
                 str(processos[idRemoto]["host"]),
@@ -44,7 +34,6 @@ class LinkPerfeito:
         self.threads: list[threading.Thread] = []
 
     def Iniciar(self) -> None:
-        """Inicializa servidor local e threads de envio para cada destino."""
         hostLocal = str(self.processos[self.idProcesso]["host"])
         portaLocal = int(self.processos[self.idProcesso]["porta"])
 
@@ -68,7 +57,6 @@ class LinkPerfeito:
             self.threads.append(threadEnvio)
 
     def Parar(self) -> None:
-        """Encerra servidor, conexoes e threads do modulo de comunicacao."""
         self.encerrado.set()
 
         if self.socketServidor is not None:
@@ -90,13 +78,11 @@ class LinkPerfeito:
             threadAtual.join(timeout=1.0)
 
     def Enviar(self, destinoId: int, mensagem: dict[str, Any]) -> None:
-        """Enfileira mensagem para envio ordenado ao destino."""
         if destinoId not in self.filasSaida:
             raise ValueError(f"Destino desconhecido: {destinoId}")
         self.filasSaida[destinoId].put(mensagem)
 
     def ThreadAlvoAceitar(self) -> None:
-        """Aceita conexoes de entrada e cria uma thread de leitura por conexao."""
         while not self.encerrado.is_set():
             try:
                 conexaoSocket, _ = self.socketServidor.accept()  # type: ignore[union-attr]
@@ -117,7 +103,6 @@ class LinkPerfeito:
             self.threads.append(threadRecepcao)
 
     def ThreadAlvoReceber(self, conexaoSocket: socket.socket) -> None:
-        """Le mensagens de uma conexao de entrada ate o seu encerramento."""
         try:
             with conexaoSocket.makefile("r", encoding="utf-8") as leitor:
                 for linha in leitor:
@@ -142,7 +127,6 @@ class LinkPerfeito:
             conexaoSocket.close()
 
     def ThreadAlvoEnviar(self, destinoId: int) -> None:
-        """Consome fila de saida e envia mensagens em ordem FIFO por destino."""
         filaDestino = self.filasSaida[destinoId]
 
         while not self.encerrado.is_set():
@@ -167,7 +151,6 @@ class LinkPerfeito:
                     self.FecharConexaoSaida(destinoId)
 
     def ObterOuConectar(self, destinoId: int) -> socket.socket | None:
-        """Retorna conexao de saida ativa; caso nao exista, tenta criar."""
         with self.travaConexoes:
             conexaoExistente = self.conexoesSaida.get(destinoId)
             if conexaoExistente is not None:
@@ -193,7 +176,6 @@ class LinkPerfeito:
             return novoSocket
 
     def FecharConexaoSaida(self, destinoId: int) -> None:
-        """Fecha a conexao de saida para forcar reconexao no proximo envio."""
         with self.travaConexoes:
             conexaoAtual = self.conexoesSaida.pop(destinoId, None)
 

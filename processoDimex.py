@@ -46,11 +46,7 @@ def EscreverNoArquivoCompartilhado(caminhoArquivo: str) -> None:
 #         arquivoSaida.flush()
 
 
-def IniciarSnapshotsEmThread(
-    dimex: Dimex,
-    quantidadeSnapshots: int,
-    intervalo: float,
-) -> threading.Thread:
+def IniciarSnapshotsEmThread(dimex: Dimex, quantidadeSnapshots: int, intervalo: float) -> threading.Thread:
     def alvo() -> None:
         for indice in range(1, quantidadeSnapshots + 1):
             dimex.IniciarSnapshot(indice)
@@ -79,22 +75,14 @@ def ExecutarProcesso(
     if idProcesso not in processos:
         raise ValueError(f"idProcesso {idProcesso} nao existe no arquivo de configuracao")
 
-    dimex = Dimex(
-        idProcesso=idProcesso,
-        processos=processos,
-        diretorioSnapshots=snapshotDir,
-    )
+    dimex = Dimex(idProcesso = idProcesso, processos = processos, diretorioSnapshots = snapshotDir)
     dimex.Iniciar()
 
     acessosConcluidos = 0
 
     threadSnapshot: threading.Thread | None = None
     if snapshotQuantidade > 0 and idProcesso == snapshotIniciador:
-        threadSnapshot = IniciarSnapshotsEmThread(
-            dimex=dimex,
-            quantidadeSnapshots=snapshotQuantidade,
-            intervalo=snapshotIntervalo,
-        )
+        threadSnapshot = IniciarSnapshotsEmThread(dimex = dimex, quantidadeSnapshots = snapshotQuantidade, intervalo = snapshotIntervalo)
 
     try:
         for indiceAcesso in range(quantidadeAcessos):
